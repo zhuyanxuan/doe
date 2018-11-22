@@ -194,11 +194,12 @@
 <script th:src="@{~/v3/js/jquery.jsonEdit.js}"></script>
 
 <script type="text/javascript">
-
+    var version = "";
     function doSend() {
 
         var methodKey = $("input[name='rdMethodKey']:checked").val();
         var json = $("#txtParams").val();
+        $("#txtResult").val("");
 
         if (null == providerKey || providerKey.length <= 0) {
             return;
@@ -206,7 +207,7 @@
         if (null == json || json.length <= 0) {
             return;
         }
-        var params = {"providerKey": providerKey, "json": json, "methodKey": methodKey};
+        var params = {"providerKey": providerKey, "json": json, "methodKey": methodKey, "version":version };
         Nora.Ajax("/doe/dubbo/doSend", params, function (data) {
 
             if (data.success && null != data.data && data.data.length > 0) {
@@ -251,7 +252,7 @@
             url : "/doe/case/doList",
             datatype : "json",
             height : 300,
-            colNames : [ '流水号', '插入时间', '用例名称', '提供者地址', '接口名称', '方法名称', 'providerKey', 'methodKey', 'json', '用例描述'],
+            colNames : [ '流水号', '插入时间', '用例名称', '提供者地址', '接口名称', '方法名称', 'providerKey', 'methodKey', 'json', 'version', '用例描述'],
             colModel:[
                 {name: 'caseId', index: 'caseId', width: 50, editable: false, hidden: false},
                 {name: 'insertTime', index: 'insertTime', width: 80, editable: false, formatter: JGridUtils.dateTimeFormat},
@@ -262,6 +263,7 @@
                 {name: 'providerKey', index: 'providerKey',  hidden: true, edittype: "text"},
                 {name: 'methodKey', index: 'methodKey', hidden: true, edittype: "text"},
                 {name: 'json', index: 'json', hidden: true, edittype: "text"},
+                {name: 'version', index: 'version', hidden:true, edittype: "text"},
                 {name: 'caseDesc', index: 'caseDesc', hidden: true, editable: false, edittype: "text"}
             ],
 
@@ -289,6 +291,7 @@
                     var json = jQuery(grid_selector).jqGrid('getRowData', ids)['json'];
                     methodKey = jQuery(grid_selector).jqGrid('getRowData', ids)['methodKey'];
                     providerKey = jQuery(grid_selector).jqGrid('getRowData', ids)['providerKey'];
+                    version = jQuery(grid_selector).jqGrid('getRowData', ids)['version'];
                     doListMethods(methodKey, methodText);
                     doPrepareMethodParams(json);
                 }
