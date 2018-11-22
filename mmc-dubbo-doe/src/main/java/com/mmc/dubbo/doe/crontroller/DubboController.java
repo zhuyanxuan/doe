@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Joey
@@ -77,8 +78,11 @@ public class DubboController {
             resultDTO = connectService.send(dto);
 
         } catch(Exception e) {
-
-            resultDTO = ResultDTO.createExceptionResult(e, String.class);
+            if(e instanceof TimeoutException){
+                resultDTO = ResultDTO.createExceptionResult(new Exception("访问超时！"), String.class);
+            }else{
+                resultDTO = ResultDTO.createExceptionResult(e, String.class);
+            }
         }
 
         return resultDTO;

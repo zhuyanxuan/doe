@@ -15,6 +15,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.mmc.dubbo.doe.cache.MethodCaches;
 import com.mmc.dubbo.doe.cache.UrlCaches;
+import com.mmc.dubbo.doe.classloader.ClassLoaderProxy;
+import com.mmc.dubbo.doe.classloader.StandardExecutorClassLoader;
 import com.mmc.dubbo.doe.context.Const;
 import com.mmc.dubbo.doe.dto.ConnectDTO;
 import com.mmc.dubbo.doe.dto.MethodModelDTO;
@@ -68,10 +70,10 @@ public class ClassServiceImpl implements ClassService {
         try {
 
             // show only public method
-            Class<?> clazz = Class.forName(interfaceName);
+            Class<?> clazz = ClassLoaderProxy.getClassLoader(dto.getVersion()).loadClass(interfaceName);
             Method[] methods = clazz.getMethods();
             // convert and cache method object associate witch the unique key
-            List<MethodModelDTO> models = MethodCaches.cache(interfaceName, methods);
+            List<MethodModelDTO> models = MethodCaches.cache(dto.getVersion()+interfaceName, methods);
 
             return models;
 

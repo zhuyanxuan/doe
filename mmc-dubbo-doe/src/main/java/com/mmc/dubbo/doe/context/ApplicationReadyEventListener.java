@@ -9,6 +9,8 @@
  */
 package com.mmc.dubbo.doe.context;
 
+import com.mmc.dubbo.doe.cache.RedisResolver;
+import com.mmc.dubbo.doe.client.ProcessClient;
 import com.mmc.dubbo.doe.service.PomService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -46,5 +48,13 @@ public class ApplicationReadyEventListener implements ApplicationListener<Applic
             log.error("fail to load jars.", e);
         }
 
+        try {
+            RedisResolver redisResolver = applicationContext.getBean(RedisResolver.class);
+            if(redisResolver.hasKey(Const.DOE_DOWNLOAD_JAR_TASK)) {
+                redisResolver.del(Const.DOE_DOWNLOAD_JAR_TASK);
+            }
+        } catch (Exception e){
+            log.error("{}",e);
+        }
     }
 }

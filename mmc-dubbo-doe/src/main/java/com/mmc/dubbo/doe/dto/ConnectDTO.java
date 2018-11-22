@@ -39,6 +39,10 @@ public class ConnectDTO extends BaseDTO {
      */
     private String methodName;
     /**
+     * version
+     */
+    private String version;
+    /**
      * method params.
      */
     private String json;

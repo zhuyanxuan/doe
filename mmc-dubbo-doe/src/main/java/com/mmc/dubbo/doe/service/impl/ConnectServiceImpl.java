@@ -82,6 +82,12 @@ public class ConnectServiceImpl implements ConnectService {
         CompletableFuture<RpcResult> future = ResponseDispatcher.getDispatcher().getFuture(req);
         RpcResult result = future.get(timeout, TimeUnit.SECONDS);
         ResponseDispatcher.getDispatcher().removeFuture(req);
+        if(result.getException() != null){
+            throw (Exception)result.getException();
+        }
+        if(result.getValue() == null){
+            throw new Exception("无任何返回");
+        }
 
         return ResultDTO.createSuccessResult("SUCCESS",
                 JSON.toJSONString(result.getValue(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat),

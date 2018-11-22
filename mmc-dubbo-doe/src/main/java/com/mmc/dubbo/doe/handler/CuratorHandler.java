@@ -46,13 +46,14 @@ public class CuratorHandler {
         this.port = port;
     }
 
-    public void doConnect() throws NoSuchFieldException, IllegalAccessException {
+    public void doConnect() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
 
         CuratorZookeeperTransporter zookeeperTransporter = new CuratorZookeeperTransporter();
         URL url = new URL(protocol, host, port);
 
         registry = new ZookeeperRegistry(url, zookeeperTransporter);
 
+        Thread.sleep(10000);
         Field field = registry.getClass().getDeclaredField("zkClient");
         field.setAccessible(true);
         zkClient = (ZookeeperClient) field.get(registry);
@@ -81,12 +82,12 @@ public class CuratorHandler {
         return UrlCaches.cache(interfaceName, list);
     }
 
-    public List<MethodModelDTO> getMethods(String interfaceName) throws ClassNotFoundException {
+    public List<MethodModelDTO> getMethods(String interfaceName,String version) throws ClassNotFoundException {
 
         Class<?> clazz = Class.forName(interfaceName);
         Method[] methods = clazz.getMethods();
-
-        return MethodCaches.cache(interfaceName, methods); // 缓存一份，方便下次调用
+        // 缓存一份，方便下次调用
+        return MethodCaches.cache(version+interfaceName, methods);
 
     }
 

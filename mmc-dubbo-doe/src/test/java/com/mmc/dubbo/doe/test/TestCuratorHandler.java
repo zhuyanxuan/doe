@@ -29,7 +29,7 @@ public class TestCuratorHandler {
     private CuratorHandler client;
 
     @Before
-    public void testConnect() throws NoSuchFieldException, IllegalAccessException {
+    public void testConnect() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
 
         client = new CuratorHandler("zookeeper", "127.0.0.1", 2181);
         client.doConnect();
@@ -65,7 +65,7 @@ public class TestCuratorHandler {
     public void testGetMethods() throws ClassNotFoundException {
 
         String interfaceName = "com.mmc.dubbo.api.user.UserService";
-        List<MethodModelDTO> list = client.getMethods(interfaceName);
+        List<MethodModelDTO> list = client.getMethods(interfaceName,"");
         Assert.assertFalse(list.isEmpty());
 
         System.out.println("----------------------------------------------------------------");

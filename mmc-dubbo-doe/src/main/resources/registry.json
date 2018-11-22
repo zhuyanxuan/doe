@@ -1,6 +1,9 @@
 [
   {
-    "registryKey": "127.0.0.1:2181",
-    "registryDesc": "localhost -- 127.0.0.1:2181"
+    "registryKey": "10.2.0.201:2181",
+    "registryDesc": "dev -- 10.2.0.201:2181"
+  },{
+    "registryKey": "10.3.0.201:2181",
+    "registryDesc": "fat -- 10.3.0.201:2181"
   }
 ]

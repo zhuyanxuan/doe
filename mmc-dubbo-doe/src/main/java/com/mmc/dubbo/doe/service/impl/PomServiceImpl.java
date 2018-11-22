@@ -12,6 +12,8 @@ package com.mmc.dubbo.doe.service.impl;
 import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.fastjson.JSON;
 import com.mmc.dubbo.doe.cache.RedisResolver;
+import com.mmc.dubbo.doe.classloader.ClassLoaderProxy;
+import com.mmc.dubbo.doe.classloader.StandardExecutorClassLoader;
 import com.mmc.dubbo.doe.client.ProcessClient;
 import com.mmc.dubbo.doe.context.Const;
 import com.mmc.dubbo.doe.context.TaskContainer;
@@ -81,7 +83,7 @@ public class PomServiceImpl implements PomService {
     public ResultDTO<PomDTO> invoke() {
 
         PomDTO dto = new PomDTO();
-        ProcessClient processClient = new ProcessClient(dto, redisResolver, pomXml, libPath);
+        ProcessClient processClient = new ProcessClient(dto, redisResolver, pomXml, libPath, null);
 
         // just can only invoke one task to downloaded the jars.
         // we can invoke more task after we have finished all code actually.
@@ -111,17 +113,18 @@ public class PomServiceImpl implements PomService {
     @Override
     public ResultDTO<PomDTO> invoke(@NotNull PomDTO dto) throws Exception {
 
-        ProcessClient processClient = new ProcessClient(dto, redisResolver, pomXml, libPath);
-
         // just can only invoke one task to downloaded the jars.
         // we can invoke more task after we have finished all code actually.
-        if (processClient.isRunning()) {
+        if (ProcessClient.isRunning(redisResolver)) {
             return ResultDTO.createErrorResult("some task was already running at background, please try again for a few minutes later.", PomDTO.class);
         }
 
         // parse the pom
         log.info("begin to parse the pom.");
         List<PomModel> models = parsePom(dto.getPom());
+        if(models.size() > 1){
+            return ResultDTO.createErrorResult("一次只能添加一个POM", PomDTO.class);
+        }
 
         // check the model is good or not
         checkModels(models);
@@ -139,6 +142,7 @@ public class PomServiceImpl implements PomService {
 
             // download jars asynchronously
             log.info("fork another thread to download jars.");
+            ProcessClient processClient = new ProcessClient(dto, redisResolver, pomXml, libPath, models.get(0));
             TaskContainer.getTaskContainer().execute(processClient);
             log.info("success fork another thread to download jars.");
 
@@ -308,36 +312,40 @@ public class PomServiceImpl implements PomService {
         checkForChanges();
 
         // 系统类库路径
-        File libPath = new File(fullLibPath);
-
-        // 获取所有的.jar和.zip文件
-        File[] jarFiles = libPath.listFiles((dir, name) -> name.endsWith(".jar") || name.endsWith(".zip"));
-
-        if (jarFiles != null) {
-            // 从URLClassLoader类中获取类所在文件夹的方法
-            // 对于jar文件，可以理解为一个存放class文件的文件夹
-            Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            boolean accessible = method.isAccessible();     // 获取方法的访问权限
-            try {
-                if (!accessible) {
-                    method.setAccessible(true);     // 设置方法的访问权限
-                }
+        File pathDir = new File(fullLibPath);
+        File[] dirFile = pathDir.listFiles((dir, name) -> dir.isDirectory());
+        if(dirFile != null && dirFile.length > 0) {
+            for (File dir: dirFile){
+                // 从URLClassLoader类中获取类所在文件夹的方法
+                Method method = ClassLoaderProxy.getClassLoader(dir.getName()).getClass().getDeclaredMethod("addURL", URL.class);
                 // 获取系统类加载器
-                URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                for (File file : jarFiles) {
-                    URL url = file.toURI().toURL();
+                URLClassLoader classLoader = ClassLoaderProxy.getClassLoader(dir.getName());
+                // 获取所有的.jar和.zip文件
+                // 对于jar文件，可以理解为一个存放class文件的文件夹
+                File[] jarFiles = dir.listFiles((file, name) -> name.endsWith(".jar") || name.endsWith(".zip"));
+                if (jarFiles != null && jarFiles.length > 0) {
+                    // 获取方法的访问权限
+                    boolean accessible = method.isAccessible();
                     try {
-                        method.invoke(classLoader, url);
-                        log.debug("读取jar文件[name={}]", file.getName());
-                    } catch (Exception e) {
-                        log.error("读取jar文件[name={}]失败", file.getName());
+                        if (!accessible) {
+                            // 设置方法的访问权限
+                            method.setAccessible(true);
+                        }
+                        for (File file : jarFiles) {
+                            URL url = file.toURI().toURL();
+                            try {
+                                method.invoke(classLoader, url);
+                                log.debug("读取jar文件[name={}]", file.getName());
+                            } catch (Exception e) {
+                                log.error("读取jar文件[name={}]失败", file.getName());
+                            }
+                        }
+                    } finally {
+                        method.setAccessible(accessible);
                     }
                 }
-                return ResultDTO.createSuccessResult("load jars completely and successfully", String.class);
-
-            } finally {
-                method.setAccessible(accessible);
             }
+            return ResultDTO.createSuccessResult("load jars completely and successfully", String.class);
         } else {
             return ResultDTO.createErrorResult(StringUtil.format("Can't found any jars from {}.", fullLibPath), String.class);
         }

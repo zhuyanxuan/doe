@@ -36,6 +36,8 @@ public class MethodModelDTO {
      */
     private String methodText;
 
+    private String version;
+
     public MethodModelDTO() {
 
     }

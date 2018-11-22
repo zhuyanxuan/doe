@@ -14,6 +14,7 @@ import com.mmc.dubbo.doe.context.Const;
 import com.mmc.dubbo.doe.context.TaskContainer;
 import com.mmc.dubbo.doe.dto.PomDTO;
 import com.mmc.dubbo.doe.handler.StreamHandler;
+import com.mmc.dubbo.doe.model.PomModel;
 import com.mmc.dubbo.doe.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,12 +35,14 @@ public class ProcessClient extends Thread {
     private final String pomXml;
     private long timeout = 20;
     private volatile boolean done;
+    private PomModel model;
 
-    public ProcessClient(PomDTO dto, RedisResolver redisResolver, String pomXml, String libPath) {
+    public ProcessClient(PomDTO dto, RedisResolver redisResolver, String pomXml, String libPath,PomModel model) {
         this.dto = dto;
         this.redisResolver = redisResolver;
         this.pomXml = pomXml;
         this.libPath = libPath;
+        this.model = model;
     }
 
     @Override
@@ -100,11 +103,14 @@ public class ProcessClient extends Thread {
      * @return
      */
     private String makeCommand(String pomXml) {
-
+        String dir = "";
+        if(model != null){
+            dir = "/" + model.getArtifactId() + "-" + model.getVersion();
+        }
         if (isOSLinux()) {
-            return StringUtil.format("/bin/bash -c  mvn dependency:copy-dependencies -DoutputDirectory={} -DincludeScope=compile -f {}", libPath, pomXml);
+            return StringUtil.format("/bin/bash -c  mvn dependency:copy-dependencies -DoutputDirectory={} -DincludeScope=compile -f {}", libPath + dir, pomXml);
         } else {
-            return StringUtil.format("cmd /c  mvn dependency:copy-dependencies -DoutputDirectory=lib -DincludeScope=compile -f {}", pomXml);
+            return StringUtil.format("cmd /c  mvn dependency:copy-dependencies -DoutputDirectory={} -DincludeScope=compile -f {}", "lib" + dir, pomXml);
         }
     }
 
@@ -130,6 +136,14 @@ public class ProcessClient extends Thread {
 
     public boolean isRunning() {
 
+        if (redisResolver.hasKey(Const.DOE_DOWNLOAD_JAR_TASK)) {
+            log.warn("some task was already running at background, please try again for a few minutes later.");
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isRunning(RedisResolver redisResolver){
         if (redisResolver.hasKey(Const.DOE_DOWNLOAD_JAR_TASK)) {
             log.warn("some task was already running at background, please try again for a few minutes later.");
             return true;

@@ -42,7 +42,7 @@ public class TestProcessClient {
         System.out.println(libPath);
 
         PomDTO dto = new PomDTO();
-        ProcessClient client = new ProcessClient(dto, redisResolver, pomXml, libPath);
+        ProcessClient client = new ProcessClient(dto, redisResolver, pomXml, libPath, null);
         client.start();
         client.join();
 

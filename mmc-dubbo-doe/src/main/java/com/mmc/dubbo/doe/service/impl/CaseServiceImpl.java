@@ -60,7 +60,7 @@ public class CaseServiceImpl implements CaseService {
 
         model.setAddress(UrlCaches.get(model.getProviderKey()).getUrl().getAddress());
         model.setInterfaceName(UrlCaches.get(model.getProviderKey()).getUrl().getParameter(Constants.INTERFACE_KEY ));
-        model.setMethodText(MethodCaches.get(model.getMethodKey()).getMethodText());
+        model.setMethodText(MethodCaches.get(model.getVersion()+model.getMethodKey()).getMethodText());
         model.setCaseId(counter.getAndAdd(1));
         model.setInsertTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 

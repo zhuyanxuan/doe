@@ -12,9 +12,9 @@ spring:
   redis:
       # 数据库索引
       database: 0
-      host: 10.204.56.50
-      port: 8080
-      password: admin.123
+      host: 127.0.0.1
+      port: 6379
+      #password: admin.123
       jedis:
           pool:
               # 最大连接数

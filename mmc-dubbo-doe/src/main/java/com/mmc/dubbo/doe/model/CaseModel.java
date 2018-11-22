@@ -55,5 +55,5 @@ public class CaseModel {
      * expected result.
      */
     private String expect;
-
+    private String version;
 }
