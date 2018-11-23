@@ -217,12 +217,12 @@
 
             } else {
                 // on fail
-                bootbox.alert(null == data ? "操作失败！" : data.msg);
+                bootbox.alert(JSON.stringify(data));
             }
 
         }, function (data) {
             // on error
-            bootbox.alert(null == data ? "操作异常!" : data.msg);
+            bootbox.alert(JSON.stringify(data));
         });
 
     }
