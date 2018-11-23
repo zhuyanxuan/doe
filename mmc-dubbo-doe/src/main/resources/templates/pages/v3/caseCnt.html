@@ -161,6 +161,12 @@
                                         <i class="icon-undo bigger-110"></i>
                                         重置
                                     </button>
+
+                                    &nbsp; &nbsp; &nbsp;
+                                    <button class="btn" type="button" onclick="doDel();">
+                                        <i class="icon-remove bigger-110"></i>
+                                        删除当前
+                                    </button>
                                 </div>
                             </div>
 
@@ -195,6 +201,8 @@
 
 <script type="text/javascript">
     var version = "";
+    var selectRow;
+    var selectRowIndex;
     function doSend() {
 
         var methodKey = $("input[name='rdMethodKey']:checked").val();
@@ -225,6 +233,35 @@
             bootbox.alert(JSON.stringify(data));
         });
 
+    }
+
+    function doDel(){
+        if(selectRow && confirm("确定删除？")){
+            var providerKey = selectRow["providerKey"];
+            var methodKey = selectRow["methodKey"];
+            var caseName = selectRow["caseName"];
+            var caseId = selectRow["caseId"];
+            var insertTime = selectRow["insertTime"];
+            var json = selectRow["json"];
+            var address = selectRow["address"];
+            var interfaceName = selectRow["interfaceName"];
+            var methodText = selectRow["methodText"];
+            var params = {"providerKey": providerKey, "json": json, "methodKey": methodKey, "caseName": caseName, "caseId":caseId, "insertTime":insertTime, "address":address, "interfaceName":interfaceName, "methodText":methodText};
+            Nora.Ajax("/doe/case/doDel", params, function (data) {
+                if (data.success && null != data.data) {
+
+                    // on success
+                    bootbox.alert(data.msg);
+                    jQuery("#grid-table").jqGrid("delRowData", selectRowIndex);
+                } else {
+                    // on fail
+                    bootbox.alert(null == data ? "操作失败！" : null != data.msg ? data.msg : data.remark);
+                }
+            }, function (data) {
+                // on error
+                bootbox.alert(null == data ? "操作失败！" : null != data.msg ? data.msg : data.remark);
+            });
+        }
     }
 
     function doPrepareMethodParams(json) {
@@ -287,6 +324,8 @@
             },
             onSelectRow : function(ids) {
                 if( ids != null){
+                    selectRowIndex = ids;
+                    selectRow = jQuery(grid_selector).jqGrid('getRowData', ids);
                     var methodText = jQuery(grid_selector).jqGrid('getRowData', ids)['methodText'];
                     var json = jQuery(grid_selector).jqGrid('getRowData', ids)['json'];
                     methodKey = jQuery(grid_selector).jqGrid('getRowData', ids)['methodKey'];
@@ -294,6 +333,8 @@
                     version = jQuery(grid_selector).jqGrid('getRowData', ids)['version'];
                     doListMethods(methodKey, methodText);
                     doPrepareMethodParams(json);
+                }else{
+                    selectRow = null;
                 }
             },
             autowidth : true

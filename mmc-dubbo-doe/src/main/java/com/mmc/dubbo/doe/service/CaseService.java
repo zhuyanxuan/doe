@@ -36,4 +36,5 @@ public interface CaseService {
      */
     List<Object> listAll();
 
+    ResultDTO<CaseModel> del(CaseModel model);
 }

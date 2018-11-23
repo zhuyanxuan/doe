@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * @author Joey
@@ -68,6 +69,27 @@ public class CaseServiceImpl implements CaseService {
 
         // TODO
         // save to db.
+
+        return ResultDTO.createSuccessResult("SUCCESS", model, CaseModel.class);
+    }
+
+    @Override
+    public ResultDTO<CaseModel> del(CaseModel model) {
+        if (StringUtils.isEmpty(model.getProviderKey())) {
+            throw new DoeException("获取不到提供者！");
+        }
+        if (StringUtils.isEmpty(model.getMethodKey())) {
+            throw new DoeException("获取不到方法！");
+        }
+
+        List<Object> result = listAll().stream().filter(o -> {
+            CaseModel mm = (CaseModel)o;
+            return !(mm.getProviderKey().equals(model.getProviderKey()) && mm.getMethodKey().equals(model.getMethodKey()) && mm.getInterfaceName().equals(model.getInterfaceName()) && mm.getInsertTime().equals(model.getInsertTime()));
+        }).collect(Collectors.toList());
+
+        redisResolver.del(Const.DOE_CASE_KEY);
+
+        redisResolver.lSet(Const.DOE_CASE_KEY, result);
 
         return ResultDTO.createSuccessResult("SUCCESS", model, CaseModel.class);
     }

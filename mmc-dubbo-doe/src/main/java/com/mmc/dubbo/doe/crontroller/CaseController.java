@@ -38,6 +38,25 @@ public class CaseController {
     @Autowired
     private CaseService caseService;
 
+    @RequestMapping("/doDel")
+    public ResultDTO<CaseModel> doDel(@NotNull CaseModelDTO dto) {
+        log.info("CaseController.doDel({})", JSON.toJSONString(dto));
+
+        ResultDTO<CaseModel> resultDTO;
+
+        try {
+
+            CaseModel model = new CaseModel();
+            BeanUtils.copyProperties(dto, model);
+            resultDTO = caseService.del(model);
+
+        } catch(Exception e) {
+
+            resultDTO = ResultDTO.createExceptionResult(e, CaseModel.class);
+        }
+
+        return resultDTO;
+    }
 
     @RequestMapping("/doSave")
     public ResultDTO<CaseModel> doSave(@NotNull CaseModelDTO dto) {
